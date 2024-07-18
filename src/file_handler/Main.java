@@ -13,11 +13,10 @@ import nodes.Node;
 import nodes.NodeComparator;
 
 public class Main {
-
 	private static final String dataFile = "dataFile";
-	private static final String dataFileSorted = "dataFileSorted";
+	private static final String dataFileSorted = "dataSortedFile";
 	private static final String indexFile = "indexFile";
-	private static final String indexFileSorted = "indexFileSorted";
+	private static final String indexFileSorted = "indexSortedFile";
 	
 	private static final int numKeys = 10000;
 	private static final int minKey = 1;
@@ -40,18 +39,12 @@ public class Main {
 		// create dataFile and indexed file
 		createFiles(f1, f2, f3, f4, totalKeys);
 
-		searchFiles(f1, f2, f3, f4, totalKeys, searchKeys);
+		searchFiles(f1, f2, f3, f4, totalKeys, searchKeys);	//TODO na ta anoigw kai na ta kleinw
 		} catch (IOException e) {
 			System.err.println("An error occurred: "+e.getMessage());
             //noinspection CallToPrintStackTrace
             e.printStackTrace();
-		} finally {
-			f1.CloseFile();
-			f2.CloseFile();
-			f3.CloseFile();
-			f4.CloseFile();
 		}
-				
 	}
 	private static void searchFiles(FileManager f1, FileManager f2, FileManager f3, FileManager f4, int[] totalKeys, int[] searchKeys) throws IOException {
 		System.out.println("============ Now serial searching data file =======================");
@@ -89,11 +82,13 @@ public class Main {
 	}
 
 	private static void createFiles(FileManager f1, FileManager f2,  FileManager f3,  FileManager f4, int [] totalKeys) throws IOException {
-		f1.CreateFile(indexFile);
-		f2.CreateFile(dataFile);
-		
-		f1.OpenFile();
-		f2.OpenFile();
+		if(f1.CreateFile(indexFile) == 0 || f2.CreateFile(dataFile) == 0){
+			throw new IOException();
+		}
+
+		if(f1.OpenFile() == -1 || f2.OpenFile() == -1){
+			throw new IOException();
+		}
 
 		byte [] block;
 		Random random = new Random(); 
@@ -140,8 +135,6 @@ public class Main {
 		System.out.println("============ Now sorting data file ================================");
 
 		Vector<Node> listNodes = createNodesFromDataFile(f1);        //unordered
-		if(listNodes == null)
-			throw new IOException();
 
 		Collections.sort(listNodes, new NodeComparator());
 
@@ -154,26 +147,26 @@ public class Main {
 		System.out.println("============ Now sorting index file ===============================");
 		Vector<IndexNode> indexListNodes = createIndexedNodesFromIndFile(f2);
 
-		if(indexListNodes == null)
-			throw new IOException();
 		Collections.sort(indexListNodes, new IndexNodeComparator());
 		
 
 		System.out.println("============ Now creating sorted index file =======================");
 		System.out.println();
+
 		createSortedIndexedFile(f4, indexListNodes);
-		
-		
-		f1.CloseFile();
-		f2.CloseFile();
+
+		if(f1.CloseFile() == 0 || f2.CloseFile() == 0)
+			throw new IOException();
 	}
+
+
 	public static void createSortedIndexedFile(FileManager f4, Vector<IndexNode> indexListNodes) throws IOException{
 		if(f4.CreateFile(indexFileSorted) == 0) {
-			System.err.println("An error occurred in creating sorted data file");
+//			System.err.println("An error occurred in creating sorted data file");
 			throw new IOException();
 		}
 		if(f4.OpenFile() == -1) {
-			System.err.println("An error occurred in opening data file");
+//			System.err.println("An error occurred in opening data file");
 			throw new IOException();
 		}
 		byte [] block;
@@ -184,15 +177,20 @@ public class Main {
     		output1.writeInt(indexListNodes.get(i-1).getPage());
     		if((i % 16) == 0){			//16 recs per page
     			block = bos1.toByteArray();
-				f4.WriteNextBlock(block);		//write key,page to index file
+				if(f4.WriteNextBlock(block) == 0) { //write key,page to index file
+					throw new IOException();
+				}
 				bos1.reset();
     		}
     	}
     	if (indexListNodes.size() % 16 != 0) {
     		block = bos1.toByteArray();
-    		f4.WriteNextBlock(block);		//write key,page to index file
+			if(f4.WriteNextBlock(block) == 0){ //write key,page to index file
+				throw new IOException();
+			}
     	}
-    	f4.CloseFile();
+		if(f4.CloseFile() == 0)
+			throw new IOException();
 	}
 	
 	public static void createSortedDataFile(FileManager f3, Vector<Node> listNodes) throws IOException{
@@ -216,16 +214,21 @@ public class Main {
     		}
 			if(((i % 4) == 0) && (i != 0)) {
 				block = bos1.toByteArray();
-				f3.AppendBlock(block);			//write page to end of fileA
+				if(f3.AppendBlock(block) == 0){	//write page to end of fileA
+					throw new IOException();
+				}
 				bos1.reset();
 			}
     	}
     	block = bos1.toByteArray();
     	
-    	f3.WriteNextBlock(block);
+    	if(f3.WriteNextBlock(block) == 0){
+			throw new IOException();
+		}
     	bos1.close();
 		output1.close();
-		f3.CloseFile();
+		if(f3.CloseFile() == 0)
+			throw new IOException();
 	}
 	
 	
@@ -246,8 +249,7 @@ public class Main {
 		while(fm.getRAF().getFilePointer() < fm.getRAF().length()) {		//read whole file
 			ReadDataPage = fm.ReadNextBlock();
 			if(ReadDataPage == null) {
-				System.out.println("An error occurred during file block reading.");
-				return;
+				throw new IOException();
 			}
 			ByteArrayInputStream bis= new ByteArrayInputStream(ReadDataPage);
 			DataInputStream ois= new DataInputStream(bis);
@@ -258,7 +260,9 @@ public class Main {
 			System.out.println();
 
 		}
-		fm.CloseFile();
+		if(fm.CloseFile() == 0)
+			throw new IOException();
+
 	}
 	
 	
@@ -277,15 +281,12 @@ public class Main {
 	/*
 	 * 1 access = 1 page file read
 	 */
-	
+
+	//IMPORTANT THE FILE IS EXPECTED TO BE OPEN
 	public static Vector<IndexNode> createIndexedNodesFromIndFile(FileManager f2) throws IOException {
 		int totDiskAcc = 0;
 		byte[] ReadDataPage;
-		
-		if(f2.OpenFile() == -1) {
-			System.err.println("An error occurred.");
-			return null;
-		}
+
 		f2.getRAF().seek(0);
 		int key;
 		int page;
@@ -294,6 +295,8 @@ public class Main {
 		
 		while(f2.getRAF().getFilePointer() < f2.getRAF().length()) {		//read whole file
 			ReadDataPage = f2.ReadNextBlock();
+			if(ReadDataPage == null)
+				throw new IOException();
 			ByteArrayInputStream bis= new ByteArrayInputStream(ReadDataPage);
 			DataInputStream ois= new DataInputStream(bis);
 			totDiskAcc += 1;
@@ -304,20 +307,16 @@ public class Main {
 				vec.add(inode);
 			}
 		}
-		
-		f2.CloseFile();
-		
+
 		System.out.println("Disk accesses for sorting D case: "+totDiskAcc);
 		return vec;
 	}
-	
+
+	//IMPORTANT THE FILE IS EXPECTED TO BE OPEN
 	public static Vector<Node> createNodesFromDataFile(FileManager f1) throws IOException {
 		int totDiskAcc = 0;
 		byte[] ReadDataPage;
-		if(f1.OpenFile() == -1) {
-			System.err.println("An error occurred.");
-			return null;
-		}
+
 		f1.getRAF().seek(FileManager.page_size);
 		int key;
 		
@@ -325,6 +324,8 @@ public class Main {
 		
 		while(f1.getRAF().getFilePointer() < f1.getRAF().length()) {		//read whole file
 			ReadDataPage = f1.ReadNextBlock();
+			if(ReadDataPage == null)
+				throw new IOException();
 			ByteArrayInputStream bis= new ByteArrayInputStream(ReadDataPage);
 			DataInputStream ois= new DataInputStream(bis);
 			totDiskAcc += 1;
@@ -338,8 +339,7 @@ public class Main {
 					vec.add(node);
 			}
 		}
-		
-		f1.CloseFile();
+
 		System.out.println("Disk accesses for sorting C case: "+totDiskAcc);
 		return vec;
 	}

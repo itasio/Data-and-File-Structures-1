@@ -44,7 +44,7 @@ public class FileManager {
 		this.fileName = fileName;
 	}	
 /**
- * creates a file, 
+ * Creates a file,
  * writes 1 page of info: data type stored, position of fp, num of pages written
  * @param name the name of the file to create
  * @return 1 in success or 0 on failure
@@ -54,8 +54,10 @@ public class FileManager {
         	this.setRAF(new RandomAccessFile (name, "rw"));
         	this.numOfPages = 0;			
         	setFileName(name);
-        	updateInfoPage();
-        	RAF.close();
+//        	if(updateInfoPage() == 0)
+//				return 0;
+        	if(CloseFile() == 0)
+				return 0;
             return 1;
 		}
 		catch(Exception e) {
@@ -64,11 +66,12 @@ public class FileManager {
 		}	
 	}
 
+
 	/**
 	 * Updates the info page of the specified file. Namely {@link #infoType}, {@link #page_size} and {@link #numOfPages}
-	 * 
+	 * @return 1 in success or 0 on failure
 	 */
-	public void updateInfoPage() {
+	public int updateInfoPage() {
 		try {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream() ;
 	    	DataOutputStream out = new DataOutputStream(bos);
@@ -87,12 +90,12 @@ public class FileManager {
 	    	
 			RAF.seek(0);
 	        RAF.write(buffer);
-			//System.out.println("Number of pages written : "+this.numOfPages);
 
+			return  1;
 		
 		} catch (IOException e) {
 			System.out.println("An error occurred in updateInfoPage");
-
+			return  0;
 		}								
     	
 	}
@@ -107,7 +110,7 @@ public class FileManager {
 	 */
 	public int OpenFile(){
 		try{
-//			RandomAccessFile MyFile = new RandomAccessFile (name, "rw");
+			this.setRAF(new RandomAccessFile (this.fileName, "rw"));
 			RAF.seek(0);
 			return this.numOfPages;
 		}
@@ -198,8 +201,9 @@ public class FileManager {
 			}
 			RAF.seek((long) page_size *page);
 			RAF.write(buffer);
-			this.updateInfoPage();
-			return 1;						//TODO make sure page 0 is not overwritten as it is info page
+//			if(updateInfoPage() == 0)
+//				return 0;
+			return 1;
 		} catch (IOException e) {
 			System.out.println("An error occurred in WriteBlock");
 			return 0;
@@ -221,7 +225,8 @@ public class FileManager {
 				this.numOfPages += 1;
 			}
 			RAF.write(buffer);
-			//this.updateInfoPage(MyFile);	//TODO why in comments ?
+//			if(updateInfoPage() == 0)
+//				return 0;
 			return 1;
 		} catch (IOException e) {
 			System.out.println("An error occurred in WriteNextBlock");
@@ -241,7 +246,8 @@ public class FileManager {
 			RAF.seek((long) (this.numOfPages + 1) * page_size);	//go to end of file
 			RAF.write(buffer);
 			this.numOfPages += 1;
-			this.updateInfoPage();
+//			if(updateInfoPage() == 0)
+//				return 0;
 			return 1;
 		} catch (IOException e) {
 			System.out.println("An error occurred in AppendBlock");
@@ -260,16 +266,20 @@ public class FileManager {
     public int DeleteBlock(int page){
 		try {
 			if (page > this.numOfPages) {
-				System.out.println("Total pages so far "+this.numOfPages);
-				System.out.println("Max available delete for page"+(this.numOfPages));
+				System.out.println("Total pages so far " + this.numOfPages);
+				System.out.println("Max available delete for page" + (this.numOfPages));
 				return 0;
-			}else {
-				RAF.seek(RAF.length() - 128);			//go to the start of last page
+			} else if (page == 0) {
+				System.out.println("Info page not allowed to be deleted.");
+				return 0;
+			} else {
+				RAF.seek(RAF.length() - page_size);			//go to the start of last page
 				byte[] ReadDataPage = this.ReadBlock(this.numOfPages);			
 				this.WriteBlock(ReadDataPage, page); //write last page to page about to be deleted
 				this.numOfPages -= 1;
-				this.updateInfoPage();
-				return 1;						//TODO make sure page 0 is not deleted
+//				if(updateInfoPage() == 0)
+//					return 0;
+				return 1;
 		}
 			} catch (IOException e) {
 				System.out.println("An error occurred in DeleteBlock");
@@ -282,8 +292,9 @@ public class FileManager {
 	 * @return 1 in success or 0 on failure
 	 */
 	public int CloseFile(){
-		try {		//TODO when is it called, and from who
-			updateInfoPage();
+		try {
+			if(updateInfoPage() == 0)
+				return 0;
 			RAF.close();
 			return 1;
 		} catch (IOException e) {
