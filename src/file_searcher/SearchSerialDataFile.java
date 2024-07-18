@@ -12,7 +12,7 @@ public class SearchSerialDataFile extends Searcher{
 	}
 	public void searchSerialDataFile(FileManager fm, int [] searchKeys, int [] keys) throws IOException {
 		int [] diskAcc = new int [keys.length];
-		byte[] ReadDataPage = new byte[FileManager.page_size];
+		byte[] ReadDataPage;
 		int totDiskAcc = 0;
 		if(fm.OpenFile() == -1) {
 			throw new IOException();

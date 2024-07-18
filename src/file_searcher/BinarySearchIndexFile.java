@@ -19,7 +19,7 @@ public class BinarySearchIndexFile extends Binary_Search{
 				throw new IOException();
 			}
 //			int pages = (int) file.length() / FileManager.page_size;
-			int pages = fm.getnumOfPages();
+			int pages = fm.getNumOfPages();
 			int prevPageForRead = 0;
 			int curPageForRead = pages/2;
 			int dis = Math.abs(curPageForRead - prevPageForRead);

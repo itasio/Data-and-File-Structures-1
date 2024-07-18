@@ -19,7 +19,7 @@ public class BinarySearchDataFile extends Binary_Search{
 		}
 //		fm.OpenFile();
 //		int pages = (int) fm.length() / FileManager.page_size - 1;
-		int pages = fm.getnumOfPages();
+		int pages = fm.getNumOfPages();
 		int prevPageForRead = 0;
 		int curPageForRead = pages/2;
 		int dis = Math.abs(curPageForRead - prevPageForRead);

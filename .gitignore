@@ -37,3 +37,10 @@ hs_err_pid*
 replay_pid*
 
 *.txt
+
+# IDEs and editors
+.idea/
+*.iml
+*.swp
+*.swo
+*.swn

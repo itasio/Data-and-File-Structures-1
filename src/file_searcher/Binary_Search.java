@@ -21,12 +21,12 @@ public abstract class Binary_Search extends Searcher{
                 return true; 
             }
             // If element is smaller than mid, then 
-            // it can only be present in left subarray 
+            // it can only be present in left sub-array
             if (vec.elementAt(mid).getKey() > keySearch) 
                 return doSearch(leftIndex, mid - 1, keySearch, vec); 
   
             // Else the element can only be present 
-            // in right subarray 
+            // in right sub-array
             return doSearch(mid + 1, rightIndex, keySearch, vec); 
         } 
   

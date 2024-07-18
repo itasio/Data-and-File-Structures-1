@@ -14,15 +14,15 @@ import nodes.NodeComparator;
 
 public class Main {
 
-	private final static String dataFile = "dataFile";
-	private final static String dataFileSorted = "dataFileSorted";
-	private final static String indexFile = "indexFile";
-	private final static String indexFileSorted = "indexFileSorted";
+	private static final String dataFile = "dataFile";
+	private static final String dataFileSorted = "dataFileSorted";
+	private static final String indexFile = "indexFile";
+	private static final String indexFileSorted = "indexFileSorted";
 	
-	private static int numKeys = 10000;
-	private final static int minKey = 1;
-	private final static int maxKey = 1000000;
-	private final static int numOfSearches = 20;
+	private static final int numKeys = 10000;
+	private static final int minKey = 1;
+	private static final int maxKey = 1000000;
+	private static final int numOfSearches = 20;
 	
 	public static void main(String[] args){
 		
@@ -42,8 +42,9 @@ public class Main {
 
 		searchFiles(f1, f2, f3, f4, totalKeys, searchKeys);
 		} catch (IOException e) {
-			System.err.println("An error occured: "+e.getMessage());
-			e.printStackTrace();
+			System.err.println("An error occurred: "+e.getMessage());
+            //noinspection CallToPrintStackTrace
+            e.printStackTrace();
 		} finally {
 			f1.CloseFile();
 			f2.CloseFile();
@@ -64,25 +65,25 @@ public class Main {
 		
 		System.out.println("============ Now binary search sorted index file ==================");
 		BinarySearchIndexFile bsif = new BinarySearchIndexFile();
-		int  diskAccesSortedIndexFile = 0;
-		for(int i = 0; i < searchKeys.length; i++) {	
-			diskAccesSortedIndexFile += bsif.searchOrderedFile(f4, totalKeys[searchKeys[i]]);
-			System.out.println();
-		}
+		int  diskAccessSortedIndexFile = 0;
+        for (int searchKey : searchKeys) {
+            diskAccessSortedIndexFile += bsif.searchOrderedFile(f4, totalKeys[searchKey]);
+            System.out.println();
+        }
 		System.out.println();
-		System.out.println("Average disk accesses of D type file organizaton: "+((diskAccesSortedIndexFile/searchKeys.length)+ 1));	
-		//+1 because for every key, i add 1 disk access to get the info from the info file
+		System.out.println("Average disk accesses of D type file organization: "+((diskAccessSortedIndexFile/searchKeys.length)+ 1));
+		//+1 because for every key, I add 1 disk access to get the info from the info file
 
 		System.out.println();
 		System.out.print("============ Now binary search sorted data file =====================");
 		BinarySearchDataFile bsdf = new BinarySearchDataFile();
-		int  diskAccesSortedDataFile = 0;
-		for(int i = 0; i < searchKeys.length; i++) {
-			System.out.println();
-			diskAccesSortedDataFile += bsdf.searchOrderedFile(f3, totalKeys[searchKeys[i]]);
-		}
+		int  diskAccessSortedDataFile = 0;
+        for (int searchKey : searchKeys) {
+            System.out.println();
+            diskAccessSortedDataFile += bsdf.searchOrderedFile(f3, totalKeys[searchKey]);
+        }
 		System.out.println();
-		System.out.println("Average disk accesses of C type file organizaton: "+diskAccesSortedDataFile/searchKeys.length);
+		System.out.println("Average disk accesses of C type file organization: "+diskAccessSortedDataFile/searchKeys.length);
 		
 		
 	}
@@ -93,8 +94,8 @@ public class Main {
 		
 		f1.OpenFile();
 		f2.OpenFile();
-	
-		byte [] block = new byte [FileManager.page_size];
+
+		byte [] block;
 		Random random = new Random(); 
 		
    		ByteArrayOutputStream bos1 = new ByteArrayOutputStream() ;
@@ -103,11 +104,11 @@ public class Main {
     	ByteArrayOutputStream bos2 = new ByteArrayOutputStream() ;
     	DataOutputStream output2 = new DataOutputStream(bos2);
     	
-    	//number of values for each key (each record) i.e. 7 ints
+    	//number of values for each key (each record) i.e. 7 integers
     	int numOfValues = (FileManager.rec_size - Integer.BYTES) / Integer.BYTES;	
 		for(int i=1; i <= numKeys; i++) {
-			output2.writeInt(totalKeys[i-1]);							//for indexfile
-			output2.writeInt(f1.getnumOfPages()+1);
+			output2.writeInt(totalKeys[i-1]);							//for indexFile
+			output2.writeInt(f1.getNumOfPages()+1);
 			
 			output1.writeInt(totalKeys[i-1]);								
 			for (int j = 0; j < numOfValues; j++) {
@@ -125,7 +126,8 @@ public class Main {
 				bos2.reset();
 			}
 		}
-		if (numKeys % 16 != 0) {
+        //noinspection ConstantValue
+        if (numKeys % 16 != 0) {
 			block = bos2.toByteArray();				//last page of keys
 			f2.WriteNextBlock(block);		//write key,page to index file
 		}
@@ -133,10 +135,13 @@ public class Main {
 		output1.close();
 		bos2.close();
 		output2.close();
-		
-		
+
+
 		System.out.println("============ Now sorting data file ================================");
-		Vector<Node> listNodes = createNodesFromDataFile(f1);		//unordered
+
+		Vector<Node> listNodes = createNodesFromDataFile(f1);        //unordered
+		if(listNodes == null)
+			throw new IOException();
 
 		Collections.sort(listNodes, new NodeComparator());
 
@@ -148,7 +153,9 @@ public class Main {
 		
 		System.out.println("============ Now sorting index file ===============================");
 		Vector<IndexNode> indexListNodes = createIndexedNodesFromIndFile(f2);
-		
+
+		if(indexListNodes == null)
+			throw new IOException();
 		Collections.sort(indexListNodes, new IndexNodeComparator());
 		
 
@@ -162,14 +169,14 @@ public class Main {
 	}
 	public static void createSortedIndexedFile(FileManager f4, Vector<IndexNode> indexListNodes) throws IOException{
 		if(f4.CreateFile(indexFileSorted) == 0) {
-			System.err.println("An error occured in creating sorted data file");
+			System.err.println("An error occurred in creating sorted data file");
 			throw new IOException();
 		}
 		if(f4.OpenFile() == -1) {
-			System.err.println("An error occured in opening data file");
+			System.err.println("An error occurred in opening data file");
 			throw new IOException();
 		}
-		byte [] block = new byte [FileManager.page_size];		//128 bytes
+		byte [] block;
 		ByteArrayOutputStream bos1 = new ByteArrayOutputStream() ;
     	DataOutputStream output1 = new DataOutputStream(bos1);
     	for(int i=1; i<=indexListNodes.size(); i++) {
@@ -190,15 +197,15 @@ public class Main {
 	
 	public static void createSortedDataFile(FileManager f3, Vector<Node> listNodes) throws IOException{
 		if(f3.CreateFile(dataFileSorted) == 0) {
-			System.err.println("An error occured in creating sorted data file");
+			System.err.println("An error occurred in creating sorted data file");
 			throw new IOException();
 		}
 		if(f3.OpenFile() == -1) {
-			System.err.println("An error occured in opening data file");
+			System.err.println("An error occurred in opening data file");
 			throw new IOException();
 		}
 		f3.getRAF().seek(FileManager.page_size);
-		byte [] block = new byte [FileManager.page_size];		//128 bytes
+		byte [] block;
 		ByteArrayOutputStream bos1 = new ByteArrayOutputStream() ;		
     	DataOutputStream output1 = new DataOutputStream(bos1);
     	for(int i = 1; i <= listNodes.size(); i++) {			//for every Node
@@ -225,11 +232,11 @@ public class Main {
 	/**
 	 * Reads the specified file from the position appointed until the end 
 	 * and prints its content is stdout as integers
-	 * @param name the name of the file to read
 	 * @param pos the position in bytes from the start of the file
 	 */
-	public static void readWholeFile(FileManager fm, long pos) throws IOException{
-		byte[] ReadDataPage = new byte[FileManager.page_size];
+	@SuppressWarnings("unused")
+    public static void readWholeFile(FileManager fm, long pos) throws IOException{
+		byte[] ReadDataPage;
 		if(fm.OpenFile() == -1) {
 			throw new IOException();
 		}
@@ -239,7 +246,7 @@ public class Main {
 		while(fm.getRAF().getFilePointer() < fm.getRAF().length()) {		//read whole file
 			ReadDataPage = fm.ReadNextBlock();
 			if(ReadDataPage == null) {
-				System.out.println("An error occured during file block reading.");
+				System.out.println("An error occurred during file block reading.");
 				return;
 			}
 			ByteArrayInputStream bis= new ByteArrayInputStream(ReadDataPage);
@@ -264,25 +271,24 @@ public class Main {
 	 */
 	public static int[] intArrayGenerator(int startInt, int endInt, int numOfElements) {
 		java.util.Random randomGenerator = new java.util.Random();
-		int[] randomInts = randomGenerator.ints(startInt, endInt).distinct().limit(numOfElements).toArray();
-		return randomInts;
+        return randomGenerator.ints(startInt, endInt).distinct().limit(numOfElements).toArray();
 	}
-	
+
 	/*
 	 * 1 access = 1 page file read
 	 */
 	
-	public static Vector<IndexNode>  createIndexedNodesFromIndFile(FileManager f2) throws IOException {
+	public static Vector<IndexNode> createIndexedNodesFromIndFile(FileManager f2) throws IOException {
 		int totDiskAcc = 0;
-		byte[] ReadDataPage = new byte[FileManager.page_size];
+		byte[] ReadDataPage;
 		
 		if(f2.OpenFile() == -1) {
-			System.err.println("An error occured.");
+			System.err.println("An error occurred.");
 			return null;
 		}
 		f2.getRAF().seek(0);
-		int key = 0;
-		int page = 0;
+		int key;
+		int page;
 		
 		Vector<IndexNode> vec = new Vector<IndexNode>();
 		
@@ -305,15 +311,15 @@ public class Main {
 		return vec;
 	}
 	
-	public static Vector<Node>  createNodesFromDataFile(FileManager f1) throws IOException {
+	public static Vector<Node> createNodesFromDataFile(FileManager f1) throws IOException {
 		int totDiskAcc = 0;
-		byte[] ReadDataPage = new byte[FileManager.page_size];
+		byte[] ReadDataPage;
 		if(f1.OpenFile() == -1) {
-			System.err.println("An error occured.");
+			System.err.println("An error occurred.");
 			return null;
 		}
 		f1.getRAF().seek(FileManager.page_size);
-		int key = 0;
+		int key;
 		
 		Vector<Node> vec = new Vector<Node>();
 		

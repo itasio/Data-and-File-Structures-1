@@ -14,7 +14,7 @@ public class SearchSerialIndexedFile extends Searcher{
 //	public void searchIndexedFile(RandomAccessFile fileA, FileManager f1, RandomAccessFile fl, FileManager fm, int [] searchKeys, int [] keys) throws IOException {
 	public void searchIndexedFile(FileManager f1, FileManager f2, int [] searchKeys, int [] keys) throws IOException {
 		int [] diskAcc = new int [keys.length];
-		byte[] ReadDataPage = new byte[FileManager.page_size];
+		byte[] ReadDataPage;
 		int totDiskAcc = 0;
 		if(f1.OpenFile() == -1 || f2.OpenFile() == -1) {
 			throw new IOException();
@@ -33,7 +33,7 @@ public class SearchSerialIndexedFile extends Searcher{
 				for(int i =0; i<32;i++) {						//each page has 32 numbers
 					if(i % 2 == 0) {
 						if (key == ois.readInt()){				//if key is found
-							diskAcc[j] += 1;		//disk accesses +1 because i count one more access
+							diskAcc[j] += 1;		//disk accesses +1 because I count one more access
 							totDiskAcc += 1;		// to get file page from file A
 							int pos = ois.readInt();
 							byte []ReadDataPage2 = f1.ReadBlock(pos);	//go to pos page of dataFile and retrieve page file 
@@ -64,8 +64,6 @@ public class SearchSerialIndexedFile extends Searcher{
 						continue;			//if key != ois.readInt()
 					}
 					ois.readInt();
-					;
-	
 				}	
 			}
 		}

@@ -1,18 +1,12 @@
 package file_handler;
-
-/** 
- * A class for manipulation of files. All instances of FileManger
- * have int data type
- */
-
 import java.io.*;
 
 /**
- * Class to handle basic file operations. Each Manager handles one file.
+ * Class to handle basic file operations. Each Manager handles one file containing int data type.
  * @author itasio
  *
  */
-public class FileManager { 
+public class FileManager {
 	public final static int page_size=128;
 	public final static int rec_size=32;
 	private final static String infoType = "int";		
@@ -32,7 +26,7 @@ public class FileManager {
 		// empty constructor
 	}
 	
-	public int getnumOfPages() {
+	public int getNumOfPages() {
 		return this.numOfPages;
 	}
 	
@@ -65,7 +59,7 @@ public class FileManager {
             return 1;
 		}
 		catch(Exception e) {
-			System.out.println("An error occured in CreateFile");
+			System.out.println("An error occurred in CreateFile");
 			return 0;
 		}	
 	}
@@ -84,7 +78,7 @@ public class FileManager {
 	    	System.arraycopy(src, 0, dst, 0, src.length);	//and copy to dst[116]
 	    	
 	   		out.write(dst, 0, dst.length);					//116 bytes	
-	    	out.writeLong(Long.valueOf(page_size));			//8 bytes
+	    	out.writeLong(page_size);			//8 bytes
 	    	out.writeInt(this.numOfPages);						//4 bytes ->now out is 128 bytes
 	    
 	    	out.close();
@@ -97,7 +91,7 @@ public class FileManager {
 
 		
 		} catch (IOException e) {
-			System.out.println("An error occured in updateInfoPage");
+			System.out.println("An error occurred in updateInfoPage");
 
 		}								
     	
@@ -107,7 +101,7 @@ public class FileManager {
 	
 	
 	/**
-	 * Opens the file associated with the FileManager class for rw, filepointer set to 0
+	 * Opens the file associated with the FileManager class for rw, file-pointer set to 0
 	 * 
 	 * @return the number of disc pages of this file in success or -1 in case of failure
 	 */
@@ -118,7 +112,7 @@ public class FileManager {
 			return this.numOfPages;
 		}
 		catch(Exception e) {
-			System.out.println("An error occured in OpenFile");
+			System.out.println("An error occurred in OpenFile");
 			return -1;
 		}
 	}
@@ -131,13 +125,13 @@ public class FileManager {
 	 */
 	public byte[] ReadBlock(int page){
 		try {
-			RAF.seek(page_size*page);
+			RAF.seek((long) page_size *page);
 			byte[] ReadDataPage = new byte[page_size];
             RAF.read(ReadDataPage);
             return ReadDataPage;
 			
 		} catch (IOException e) {
-			System.out.println("An error occured in ReadBlock");
+			System.out.println("An error occurred in ReadBlock");
 			return null;
 		}
 	}
@@ -154,7 +148,7 @@ public class FileManager {
 			RAF.read(ReadDataPage);
 			return ReadDataPage;
         } catch (IOException e) {
-			System.out.println("An error occured in ReadNextBlock");
+			System.out.println("An error occurred in ReadNextBlock");
 			return null;
 
 		}					
@@ -166,14 +160,15 @@ public class FileManager {
 	 * from the file associated with the FileManager
 	 * @return a byte array with size: {@link #page_size} or null in case of failure
 	 */
-	public byte[] ReadPrevBlock(){
+	@SuppressWarnings("unused")
+    public byte[] ReadPrevBlock(){
 		byte[] ReadDataPage = new byte[page_size];
         try {
         	RAF.seek(RAF.getFilePointer()-128);
 			RAF.read(ReadDataPage);
 			return ReadDataPage;
         } catch (IOException e) {
-			System.out.println("An error occured in ReadPrevBlock");
+			System.out.println("An error occurred in ReadPrevBlock");
 			return null;
 
 		}		
@@ -186,7 +181,7 @@ public class FileManager {
 	 * Writes a byte array in the file associated with the FileManager.
 	 * The specified page must be within limits of the total pages of the file.
 	 * <br>
-	 * e.g You cannot write in page 20 if the file has 18 pages. But you can write in pages 1-19.
+	 * e.g. You cannot write on page 20 if the file has 18 pages. But you can write on pages 1-19.
 	 * Page 19 will be appended in file. Page 0 is excluded since it is info page, not writable
 	 * @param buffer the byte array to write
 	 * @param page the page of the file to be written
@@ -201,12 +196,12 @@ public class FileManager {
 			}else if(page == (this.numOfPages+1)) {
 				this.numOfPages += 1;		
 			}
-			RAF.seek(page_size*page);
+			RAF.seek((long) page_size *page);
 			RAF.write(buffer);
 			this.updateInfoPage();
 			return 1;						//TODO make sure page 0 is not overwritten as it is info page
 		} catch (IOException e) {
-			System.out.println("An error occured in WriteBlock");
+			System.out.println("An error occurred in WriteBlock");
 			return 0;
 		}
 		
@@ -229,7 +224,7 @@ public class FileManager {
 			//this.updateInfoPage(MyFile);	//TODO why in comments ?
 			return 1;
 		} catch (IOException e) {
-			System.out.println("An error occured in WriteNextBlock");
+			System.out.println("An error occurred in WriteNextBlock");
 			return 0;
 		}
 		
@@ -243,13 +238,13 @@ public class FileManager {
 	 */
 	public int AppendBlock(byte[] buffer){
 		try {
-			RAF.seek((this.numOfPages+1) * page_size);	//go to end of file
+			RAF.seek((long) (this.numOfPages + 1) * page_size);	//go to end of file
 			RAF.write(buffer);
 			this.numOfPages += 1;
 			this.updateInfoPage();
 			return 1;
 		} catch (IOException e) {
-			System.out.println("An error occured in AppendBlock");
+			System.out.println("An error occurred in AppendBlock");
 			return 0;
 		}
 
@@ -261,7 +256,8 @@ public class FileManager {
 	 * @param page the page of file to delete
 	 * @return 1 in success or 0 on failure
 	 */
-	public int DeleteBlock(int page){
+    @SuppressWarnings("unused")
+    public int DeleteBlock(int page){
 		try {
 			if (page > this.numOfPages) {
 				System.out.println("Total pages so far "+this.numOfPages);
@@ -276,7 +272,7 @@ public class FileManager {
 				return 1;						//TODO make sure page 0 is not deleted
 		}
 			} catch (IOException e) {
-				System.out.println("An error occured in DeleteBlock");
+				System.out.println("An error occurred in DeleteBlock");
 				return 0;
 			}
 	}
@@ -291,7 +287,7 @@ public class FileManager {
 			RAF.close();
 			return 1;
 		} catch (IOException e) {
-			System.out.println("An error occured in CloseFile "+e.getMessage());
+			System.out.println("An error occurred in CloseFile "+e.getMessage());
 			return 0;
 		}
 	}
