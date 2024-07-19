@@ -21,6 +21,7 @@ public class Main {
 	private static final int numKeys = 10000;
 	private static final int minKey = 1;
 	private static final int maxKey = 1000000;
+	private static final int maxValue = 200;
 	private static final int numOfSearches = 20;
 	
 	public static void main(String[] args){
@@ -39,13 +40,24 @@ public class Main {
 		// create dataFile and indexed file
 		createFiles(f1, f2, f3, f4, totalKeys);
 
-		searchFiles(f1, f2, f3, f4, totalKeys, searchKeys);	//TODO na ta anoigw kai na ta kleinw
+		searchFiles(f1, f2, f3, f4, totalKeys, searchKeys);
 		} catch (IOException e) {
 			System.err.println("An error occurred: "+e.getMessage());
             //noinspection CallToPrintStackTrace
             e.printStackTrace();
 		}
 	}
+
+	/**
+	 * Searches in the four files
+	 * @param f1 the file manager associated with the data file.
+	 * @param f2 the file manager associated with the index file.
+	 * @param f3 the file manager associated with the sorted data file.
+	 * @param f4 the file manager associated with the sorted index file.
+	 * @param totalKeys the total keys contained in the files.
+	 * @param searchKeys the keys to search in the files.
+	 * @throws IOException if an I/O error occurs.
+	 */
 	private static void searchFiles(FileManager f1, FileManager f2, FileManager f3, FileManager f4, int[] totalKeys, int[] searchKeys) throws IOException {
 		System.out.println("============ Now serial searching data file =======================");
 		SearchSerialDataFile ssdf = new SearchSerialDataFile();
@@ -81,6 +93,15 @@ public class Main {
 		
 	}
 
+	/**
+	 * Creates the four files required
+	 * @param f1 the file manager associated with the data file.
+	 * @param f2 the file manager associated with the index file.
+	 * @param f3 the file manager associated with the sorted data file.
+	 * @param f4 the file manager associated with the sorted index file.
+	 * @param totalKeys the keys to add in the files.
+	 * @throws IOException if an I/O error occurs.
+	 */
 	private static void createFiles(FileManager f1, FileManager f2,  FileManager f3,  FileManager f4, int [] totalKeys) throws IOException {
 		if(f1.CreateFile(indexFile) == 0 || f2.CreateFile(dataFile) == 0){
 			throw new IOException();
@@ -107,7 +128,7 @@ public class Main {
 			
 			output1.writeInt(totalKeys[i-1]);								
 			for (int j = 0; j < numOfValues; j++) {
-				output1.writeInt(random.nextInt(200));					
+				output1.writeInt(random.nextInt(maxValue));
 			}
 						
 			if((i % 4) == 0) {
@@ -159,14 +180,17 @@ public class Main {
 			throw new IOException();
 	}
 
-
+	/**
+	 * Creates index file from a vector of index nodes
+	 * @param f4 the file manager associated with the data file.
+	 * @param indexListNodes the vector from which the file will be created.
+	 * @throws IOException if an I/O error occurs
+	 */
 	public static void createSortedIndexedFile(FileManager f4, Vector<IndexNode> indexListNodes) throws IOException{
 		if(f4.CreateFile(indexFileSorted) == 0) {
-//			System.err.println("An error occurred in creating sorted data file");
 			throw new IOException();
 		}
 		if(f4.OpenFile() == -1) {
-//			System.err.println("An error occurred in opening data file");
 			throw new IOException();
 		}
 		byte [] block;
@@ -192,7 +216,13 @@ public class Main {
 		if(f4.CloseFile() == 0)
 			throw new IOException();
 	}
-	
+
+	/**
+	 * Creates data file from a vector of nodes.
+	 * @param f3  the file manager associated with the data file
+	 * @param listNodes the nodes from which the file will be created
+	 * @throws IOException if an I/O error occurs.
+	 */
 	public static void createSortedDataFile(FileManager f3, Vector<Node> listNodes) throws IOException{
 		if(f3.CreateFile(dataFileSorted) == 0) {
 			System.err.println("An error occurred in creating sorted data file");
@@ -282,7 +312,14 @@ public class Main {
 	 * 1 access = 1 page file read
 	 */
 
-	//IMPORTANT THE FILE IS EXPECTED TO BE OPEN
+
+	/**
+	 * Creates a vector of index nodes from the information of the index file.
+	 * The index file must already be open.
+	 * @param f2 the file manager associated with the data file
+	 * @return a Vector of  index nodes
+	 * @throws IOException if an I/O error occurs
+	 */
 	public static Vector<IndexNode> createIndexedNodesFromIndFile(FileManager f2) throws IOException {
 		int totDiskAcc = 0;
 		byte[] ReadDataPage;
@@ -312,7 +349,14 @@ public class Main {
 		return vec;
 	}
 
-	//IMPORTANT THE FILE IS EXPECTED TO BE OPEN
+
+	/**
+	 * Creates a vector of nodes from the information of the data file.
+	 * The data file must already be open.
+	 * @param f1 the file manager associated with the data file
+	 * @return a Vector of nodes
+	 * @throws IOException if an I/O error occurs
+	 */
 	public static Vector<Node> createNodesFromDataFile(FileManager f1) throws IOException {
 		int totDiskAcc = 0;
 		byte[] ReadDataPage;

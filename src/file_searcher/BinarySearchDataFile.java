@@ -17,14 +17,12 @@ public class BinarySearchDataFile extends Binary_Search{
 		if(fm.OpenFile() == -1) {
 			throw new IOException();
 		}
-//		fm.OpenFile();
-//		int pages = (int) fm.length() / FileManager.page_size - 1;
 		int pages = fm.getNumOfPages();
 		int prevPageForRead = 0;
 		int curPageForRead = pages/2;
-		int dis = Math.abs(curPageForRead - prevPageForRead);
-		int minValPage = Integer.MIN_VALUE;
-		int maxValPage = Integer.MAX_VALUE;
+		int dis;
+		int minValPage;
+		int maxValPage ;
 		int pagesSearched = 0;
 		//First page is info page 
 		if(pages <=  1) {
@@ -50,7 +48,7 @@ public class BinarySearchDataFile extends Binary_Search{
 				Node node = new Node(key, data);
 				vec.add(node);
 			}
-			minValPage = vec.get(0).getKey();
+			minValPage = vec.getFirst().getKey();
 			maxValPage = vec.lastElement().getKey();
 			dis = Math.abs(curPageForRead - prevPageForRead);
 			if(keySearch > maxValPage) {

@@ -22,9 +22,9 @@ public class BinarySearchIndexFile extends Binary_Search{
 			int pages = fm.getNumOfPages();
 			int prevPageForRead = 0;
 			int curPageForRead = pages/2;
-			int dis = Math.abs(curPageForRead - prevPageForRead);
-			int minValPage = Integer.MIN_VALUE;
-			int maxValPage = Integer.MAX_VALUE;
+			int dis;
+			int minValPage;
+			int maxValPage;
 			int pagesSearched = 0;
 			
 			boolean found = false;
@@ -41,7 +41,7 @@ public class BinarySearchIndexFile extends Binary_Search{
 					IndexNode inode = new IndexNode(key, page);
 					vec.add(inode);
 				}
-				minValPage = vec.get(0).getKey();
+				minValPage = vec.getFirst().getKey();
 				maxValPage = vec.lastElement().getKey();
 				dis = Math.abs(curPageForRead - prevPageForRead);
 				if(keySearch > maxValPage) {

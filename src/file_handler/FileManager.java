@@ -54,8 +54,6 @@ public class FileManager {
         	this.setRAF(new RandomAccessFile (name, "rw"));
         	this.numOfPages = 0;			
         	setFileName(name);
-//        	if(updateInfoPage() == 0)
-//				return 0;
         	if(CloseFile() == 0)
 				return 0;
             return 1;
@@ -201,8 +199,6 @@ public class FileManager {
 			}
 			RAF.seek((long) page_size *page);
 			RAF.write(buffer);
-//			if(updateInfoPage() == 0)
-//				return 0;
 			return 1;
 		} catch (IOException e) {
 			System.out.println("An error occurred in WriteBlock");
@@ -225,8 +221,6 @@ public class FileManager {
 				this.numOfPages += 1;
 			}
 			RAF.write(buffer);
-//			if(updateInfoPage() == 0)
-//				return 0;
 			return 1;
 		} catch (IOException e) {
 			System.out.println("An error occurred in WriteNextBlock");
@@ -246,8 +240,6 @@ public class FileManager {
 			RAF.seek((long) (this.numOfPages + 1) * page_size);	//go to end of file
 			RAF.write(buffer);
 			this.numOfPages += 1;
-//			if(updateInfoPage() == 0)
-//				return 0;
 			return 1;
 		} catch (IOException e) {
 			System.out.println("An error occurred in AppendBlock");
@@ -277,8 +269,6 @@ public class FileManager {
 				byte[] ReadDataPage = this.ReadBlock(this.numOfPages);			
 				this.WriteBlock(ReadDataPage, page); //write last page to page about to be deleted
 				this.numOfPages -= 1;
-//				if(updateInfoPage() == 0)
-//					return 0;
 				return 1;
 		}
 			} catch (IOException e) {
